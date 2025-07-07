@@ -1,14 +1,16 @@
 services: 
   devcontainer:
+  frontend:
+    image: “ghcr.io/mcmastercce/bvd-103-mcmasterful-books/mcmasterful-books-docker:main”
     build:
-      context: .
+      context: ./frontend
       dockerfile: Dockerfile
     volumes:
-      - ../..:/workspaces:cached
+      - ./adapter:/source/adapter
     depends_on:
       - nginx
     ports:
-      - "8080:8080" # Expose 8080 to the host
+      - "9080:9080" # Host port 9080 - Container port 9080
     command: sleep infinity # Keep container running
 
   nginx:
@@ -16,4 +18,25 @@ services:
     ports:
       - "8080:80" # Host port 8080 - Container port 80
     volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro # Optional: custom config
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf # Optional: custom config
+    depends_on:
+      - frontend # Ensure frontend is ready before starting nginx
+
+    mongo:
+      image: mongo
+      ports:
+        - "27017:27017" # Host port 27017 - Container port 27017
+      container_name: mongo-db
+      
+    server:
+      image: node:20
+      working_dir: /app
+      volumes:
+        - ./:/app
+      command: npx -y tsx ./index.ts
+      ports:
+        - "3000:3000" # Host port 3000 - Container port
+      depends_on:
+        - mongo # Ensure MongoDB is ready before starting the server
+      container_name: server-app
+      
