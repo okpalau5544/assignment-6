@@ -1,0 +1,19 @@
+services: 
+  devcontainer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ../..:/workspaces:cached
+    depends_on:
+      - nginx
+    ports:
+      - "8080:8080" # Expose 8080 to the host
+    command: sleep infinity # Keep container running
+
+  nginx:
+    image: nginx:latest
+    ports:
+      - "8080:80" # Host port 8080 - Container port 80
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro # Optional: custom config
